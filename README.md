@@ -1,3 +1,5 @@
+>.[!NOTE].
+>Version BETA
 # Test ExpressWeb
 
 Este proyecto es una aplicación web de prueba que permite a los usuarios responder preguntas sobre conceptos básicos de páginas web. La aplicación muestra un cuestionario con preguntas de opción múltiple y calcula la puntuación del usuario al final.
@@ -14,3 +16,5 @@ Este proyecto es una aplicación web de prueba que permite a los usuarios respon
 - HTML
 - CSS
 - JavaScript
+
+![Captura de pantalla](screenshot.png)
