@@ -1,4 +1,4 @@
->.[!NOTE].
+> [!NOTE]
 >Version BETA
 # Test ExpressWeb
 
