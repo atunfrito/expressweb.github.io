@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test ExpressWeb</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            text-align: center;
+            background-color: #121212;
+            color: #ffffff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 10px 20px;
+            box-sizing: border-box;
+        }
+        .header img {
+            height: 210px; /* Ajusta el tamaño del logo según sea necesario */
+            width: auto; /* Mantiene la proporción del logo */
+            margin-right: 20px;
+        }
+        .header h1 {
+            font-size: 32px; /* Ajusta el tamaño del texto según sea necesario */
+            margin: 0;
+        }
+        .quiz-container {
+            width: 90%;
+            max-width: 320px; /* Ajusta el tamaño máximo del contenedor */
+            background-color: #1e1e1e;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            margin: 30px; /* Añade margen para evitar que quede en los bordes del móvil */
+        }
+        .question {
+            font-size: 18px;
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #2d2d2d;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+        .options {
+            list-style: none;
+            padding: 0;
+            margin-top: 20px;
+        }
+        .options li {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, border 0.3s ease;
+        }
+        .options li:hover {
+            background-color: #3700b3;
+        }
+        .options li.selected {
+            border: 3px solid #6200ea;
+            background-color: #6200ea;
+            color: #ffffff;
+        }
+        button {
+            background-color: #6200ea;
+            color: #ffffff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 20px;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+        button:hover {
+            background-color: #3700b3;
+            transform: translateY(-2px);
+        }
+        .hidden {
+            display: none;
+        }
+        .result {
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 20px;
+            color: #4CAF50;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background-color: #4d4d4d;
+            border-radius: 2px;
+            margin-bottom: 1rem;
+        }
+        .progress {
+            height: 100%;
+            background-color: #4CAF50;
+            width: 0;
+            transition: width 0.3s ease;
+        }
+        .logo {
+            width: 100px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="logo.png" alt="Logo" class="logo">
+        <h1>TEST</h1>
+    </div>
+    <div class="quiz-container">
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+        <div id="quiz"></div>
+        <button id="nextBtn" onclick="nextQuestion()">Siguiente</button>
+        <button id="submitBtn" class="hidden" onclick="submitQuiz()">Enviar</button>
+        <div id="result" class="hidden result"></div>
+    </div>
+
+    <script>
+        const allQuestions = [
+            { q: "¿Qué es una página web?", options: ["Un archivo de texto", "Un sitio en Internet con información", "Un tipo de programa de computadora"], answer: 1 },
+            { q: "¿Para qué sirve un 'dominio' en una página web?", options: ["Para almacenar archivos", "Para que la página tenga una dirección única en Internet", "Para hacer la página más rápida"], answer: 1 },
+            { q: "¿Qué significa 'navegar por la web'?", options: ["Escribir código en una página web", "Ver videos en línea", "Explorar diferentes sitios web en Internet"], answer: 2 },
+            { q: "¿Qué hace un 'navegador web'?", options: ["Te permite ver páginas web", "Te ayuda a programar páginas", "Guarda tus contraseñas"], answer: 0 },
+            { q: "¿Qué es un 'link' en una página web?", options: ["Un tipo de imagen", "Un texto o imagen que te lleva a otra página", "Un código para programadores"], answer: 1 },
+            { q: "¿Qué es un 'formulario' en una página web?", options: ["Una sección para ver videos", "Un espacio para escribir y enviar información", "Un diseño para la página"], answer: 1 },
+            { q: "¿Qué es un 'blog' en una página web?", options: ["Un tipo de formulario", "Un espacio donde se publican artículos o entradas de manera regular", "Una herramienta para hacer compras en línea"], answer: 1 },
+            { q: "¿Qué es una 'página de inicio' de una web?", options: ["La primera página que ves cuando entras a un sitio web", "Un lugar para hacer compras en línea", "Una página para ver videos"], answer: 0 },
+            { q: "¿Qué es un 'contenido' en una página web?", options: ["El código que hace funcionar la web", "La información que ves en la página (texto, imágenes, etc.)", "El diseño de la página"], answer: 1 },
+            { q: "¿Qué significa 'clic' en una página web?", options: ["Escribir en un formulario", "Hacer una acción al presionar un botón o enlace", "Mirar un video"], answer: 1 }
+        ];
+
+        let questions = [];
+        let currentQuestion = 0;
+        let score = 0;
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function selectRandomQuestions() {
+            shuffle(allQuestions);
+            questions = allQuestions.slice(0, 6);
+        }
+
+        function loadQuestion() {
+            const quizDiv = document.getElementById("quiz");
+            const q = questions[currentQuestion];
+            let questionHTML = `<div class='question'>${currentQuestion + 1}. ${q.q}</div><ul class='options'>`;
+            q.options.forEach((option, i) => {
+                questionHTML += `<li onclick="selectOption(this, ${i})">${option}</li>`;
+            });
+            questionHTML += "</ul>";
+            quizDiv.innerHTML = questionHTML;
+
+            document.getElementById("nextBtn").classList.toggle("hidden", currentQuestion === questions.length - 1);
+            document.getElementById("submitBtn").classList.toggle("hidden", currentQuestion !== questions.length - 1);
+        }
+
+        function selectOption(element, index) {
+            const options = document.querySelectorAll('.options li');
+            options.forEach(option => option.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+
+        function nextQuestion() {
+            const selected = document.querySelector('.options li.selected');
+            if (!selected) {
+                alert("Por favor, selecciona una respuesta");
+                return;
+            }
+            const selectedIndex = Array.from(selected.parentNode.children).indexOf(selected);
+            if (selectedIndex === questions[currentQuestion].answer) {
+                score++;
+            }
+            currentQuestion++;
+            updateProgress();
+            loadQuestion();
+        }
+
+        function submitQuiz() {
+            const selected = document.querySelector('.options li.selected');
+            if (!selected) {
+                alert("Por favor, selecciona una respuesta");
+                return;
+            }
+            const selectedIndex = Array.from(selected.parentNode.children).indexOf(selected);
+            if (selectedIndex === questions[currentQuestion].answer) {
+                score++;
+            }
+            document.getElementById("quiz").classList.add("hidden");
+            document.getElementById("nextBtn").classList.add("hidden");
+            document.getElementById("submitBtn").classList.add("hidden");
+            document.getElementById("result").innerHTML = `Tu puntuación es: ${score} / ${questions.length} <br> ¡Gracias por participar!`;
+            document.getElementById("result").classList.remove("hidden");
+        }
+
+        function updateProgress() {
+            const progress = ((currentQuestion + 1) / questions.length) * 100;
+            document.getElementById('progress').style.width = `${progress}%`;
+        }
+
+        selectRandomQuestions();
+        loadQuestion();
+    </script>
+</body>
+</html>
